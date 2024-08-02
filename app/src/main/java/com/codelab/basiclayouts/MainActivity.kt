@@ -17,6 +17,7 @@
 package com.codelab.basiclayouts
 
 import android.os.Bundle
+import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
@@ -27,16 +28,34 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,9 +67,14 @@ import androidx.compose.ui.unit.dp
 import com.codelab.basiclayouts.ui.theme.MySootheTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MySootheApp() }
+        setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
+            println("windowSizeClass: $windowSizeClass")
+            MySootheApp(windowSizeClass)
+        }
     }
 }
 
@@ -108,9 +132,32 @@ fun AlignYourBodyElement(
 // Step: Favorite collection card - Material Surface
 @Composable
 fun FavoriteCollectionCard(
+    @DrawableRes drawable: Int,
+    @StringRes text: Int,
     modifier: Modifier = Modifier
 ) {
-    // Implement composable here
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.width(250.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        onClick = { /*TODO*/ }) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = drawable),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(80.dp)
+            )
+            Text(
+                text = stringResource(id = text),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+    }
 }
 
 // Step: Align your body row - Arrangements
@@ -118,35 +165,108 @@ fun FavoriteCollectionCard(
 fun AlignYourBodyRow(
     modifier: Modifier = Modifier
 ) {
-    // Implement composable here
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//        contentPadding = PaddingValues(horizontal = 16.dp),
+        modifier = modifier
+    ) {
+        items(alignYourBodyData) { item ->
+            AlignYourBodyElement(drawable = item.drawable, text = item.text)
+        }
+    }
 }
 
-// Step: Favorite collections grid - LazyGrid
 @Composable
 fun FavoriteCollectionsGrid(
     modifier: Modifier = Modifier
 ) {
-    // Implement composable here
+    LazyHorizontalGrid(
+        rows = GridCells.Fixed(2),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier
+            .height(168.dp)
+    ) {
+        items(favoriteCollectionsData) { item ->
+            FavoriteCollectionCard(
+                drawable = item.drawable, text = item.text,
+                Modifier.height(80.dp)
+            )
+        }
+    }
 }
 
 // Step: Home section - Slot APIs
 @Composable
 fun HomeSection(
+    @StringRes text: Int,
+    content: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Implement composable here
+    Column(modifier) {
+        Text(
+            stringResource(id = text), style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier
+                .paddingFromBaseline(top = 40.dp, bottom = 16.dp)
+                .padding(horizontal = 16.dp)
+        )
+        content()
+    }
 }
 
-// Step: Home screen - Scrolling
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
-    // Implement composable here
+    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
+        SearchBar()
+        HomeSection(text = R.string.align_your_body, content = {
+            AlignYourBodyRow()
+        })
+        Spacer(modifier = Modifier.height(10.dp))
+        HomeSection(text = R.string.favorite_collections, content = {
+            FavoriteCollectionsGrid()
+        })
+        Spacer(Modifier.height(16.dp))
+
+    }
 }
 
 // Step: Bottom navigation - Material
 @Composable
 private fun SootheBottomNavigation(modifier: Modifier = Modifier) {
-    // Implement composable here
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+    ) {
+        NavigationBarItem(
+            selected = true, onClick = { /*TODO*/ },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Spa,
+                    contentDescription = null
+                )
+            },
+            label = {
+                Text(text = stringResource(id = R.string.bottom_navigation_home))
+            }
+        )
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null
+                )
+            },
+            label = {
+                Text(
+                    text = stringResource(R.string.bottom_navigation_profile)
+                )
+            },
+            selected = false,
+            onClick = {}
+        )
+    }
+
 }
 
 // Step: MySoothe App - Scaffold
@@ -158,30 +278,71 @@ fun MySootheAppPortrait() {
 // Step: Bottom navigation - Material
 @Composable
 private fun SootheNavigationRail(modifier: Modifier = Modifier) {
-    // Implement composable here
+    NavigationRail(
+        modifier = modifier.padding(start = 8.dp, end = 8.dp),
+        containerColor = MaterialTheme.colorScheme.background,
+    ) {
+        Column {
+            NavigationRailItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Spa,
+                        contentDescription = null
+                    )
+                },
+                label = {
+                    Text(stringResource(R.string.bottom_navigation_home))
+                },
+                selected = true,
+                onClick = {}
+            )
+
+            NavigationRailItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null
+                    )
+                },
+                label = {
+                    Text(stringResource(R.string.bottom_navigation_profile))
+                },
+                selected = false,
+                onClick = {}
+            )
+        }
+    }
 }
 
-// Step: Landscape Mode
 @Composable
 fun MySootheAppLandscape() {
-    // Implement composable here
+    MySootheTheme {
+        Row {
+            SootheNavigationRail()
+            HomeScreen()
+        }
+    }
 }
 
-// Step: MySoothe App
 @Composable
-fun MySootheApp() {
-    Scaffold { scaffoldPadding ->
-        Column(
-            modifier = Modifier
-                .padding(scaffoldPadding)
-                .padding(18.dp, 12.dp)
-        ) {
-            SearchBar()
-            AlignYourBodyElement(
-                text = R.string.ab1_inversions,
-                drawable = R.drawable.ab1_inversions,
-                modifier = Modifier.padding(8.dp)
-            )
+fun MySootheApp(windowSize: WindowSizeClass) {
+    when (windowSize.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            Scaffold(
+                bottomBar = {
+                    SootheBottomNavigation()
+                }
+            ) { scaffoldPadding ->
+                HomeScreen(
+                    modifier = Modifier
+                        .padding(scaffoldPadding)
+                        .padding(horizontal = 12.dp, vertical = 16.dp)
+                )
+            }
+        }
+
+        WindowWidthSizeClass.Expanded -> {
+            MySootheAppLandscape()
         }
     }
 }
@@ -232,6 +393,8 @@ fun AlignYourBodyElementPreview() {
 fun FavoriteCollectionCardPreview() {
     MySootheTheme {
         FavoriteCollectionCard(
+            text = R.string.fc2_nature_meditations,
+            drawable = R.drawable.fc2_nature_meditations,
             modifier = Modifier.padding(8.dp)
         )
     }
@@ -252,7 +415,12 @@ fun AlignYourBodyRowPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
 @Composable
 fun HomeSectionPreview() {
-    MySootheTheme { HomeSection() }
+    MySootheTheme {
+        HomeSection(
+            text = R.string.align_your_body,
+            content = {}
+        )
+    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
